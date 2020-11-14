@@ -418,7 +418,7 @@ class Linux():
         return self._reader.read()
 
                 
-'''class Windows():
+class Windows():
 
     def __init__(self, sid, col, row):
         self._id=sid
@@ -762,7 +762,7 @@ class Linux():
         finally:
             self._semaphore.release()
     
-
+'''
    
 if __name__ == "__main__":
     #a = os.popen('chcp')
