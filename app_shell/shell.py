@@ -20,6 +20,13 @@ import json
 import tempfile
 
 try:
+    import ctypes
+    from ctypes import wintypes
+    import msvcrt
+except:
+    None
+
+try:
     import termios
     import pty
     import fcntl
@@ -150,7 +157,7 @@ class ShellManager(threading.Thread):
                         sid=prprequest["id"]
                         if sid in self._shell_list:
                             shl=self._shell_list[sid]
-                            sdata=prprequest["data"]
+                            sdata=prprequest["data"] # todo: note, this data is sent in 1 character at a time
                             shl.write_inputs(sdata)
                             self._semaphore.notifyAll()
                     elif prprequest["type"]==ShellManager.REQ_TYPE_CHANGE_ROWS_COLS:
@@ -168,8 +175,7 @@ class ShellManager(threading.Thread):
                     self._shlmain._agent_main.write_except(ex,"AppShell:: shell manager " + self._id + ":")
         finally:
             self._semaphore.release()
-        
-    
+
     def run(self):
         self._timeout_cnt=0;
         self._last_timeout=long(time.time() * 1000)
@@ -183,7 +189,7 @@ class ShellManager(threading.Thread):
                     bwait=True
                     elapsed=long(time.time() * 1000)-self._last_timeout
                     if elapsed<0:
-                        self._last_timeout=long(time.time() * 1000) #Modificato orario pc
+                        self._last_timeout=long(time.time() * 1000) #pc timetable chaned
                     elif elapsed>1000:
                         self._timeout_cnt+=1;
                         self._last_timeout=long(time.time() * 1000)
@@ -445,13 +451,13 @@ class Windows():
         return self._id
     
     def initialize(self):
-        #Legge il codepage di cmd
+        #Get character set
         a = os.popen('chcp')
         self._chcp = a.read()
         a.close()
         self._chcp="cp" + self._chcp.split(":")[1].strip()
         
-        #Crea file di output
+        #Create output file
         tn=tempfile.mkstemp()[1]
         self._tfile =  codecs.open(tn, 'wb')
         si = subprocess.STARTUPINFO()
@@ -464,7 +470,7 @@ class Windows():
                                        
         self._cur_file = codecs.open(tn, 'r', self._chcp)
         #self._process.stdin.write("MODE CON: COLS=" + str(self._col)+ " LINES=" + str(self._row) + "\n")
-    
+
     def terminate(self):
         self._bterm=True
         self._cur_file.close()
@@ -488,8 +494,119 @@ class Windows():
     
     def is_terminate(self):
         return self._bterm
-    
+
+    def write_inputs(self, c):
+        if self._bterm == None:
+            return
+        if not isinstance(c, unicode):
+            c = c.decode("utf8")
+        if c == "\r":
+            c = "\r\n"
+        else:
+            self._pre_data = c
+        self._process.stdin.write(c)
+        self._process.stdin.flush()
+
+    def write_inputs_x(self, c):
+        # Check if process has terminated
+        poll = self._process.poll()
+        if poll != None:
+            raise Exception("Shell closed.")
+        self._semaphore.acquire()
+        try:
+            if c== "\r":
+                self._add_history_cmd()
+                #Send the command
+                self._process.stdin.write(self._cur_cmd.encode(self._chcp) + "\r\n")
+                self._process.stdin.flush()
+                self._cur_cmd=""
+                self._cur_cmd_pos=0
+                self._cur_cmd_notify=[]
+                time.sleep(0.1) #Wait 100 ms
+            elif c== "\b":
+                if self._cur_cmd_pos>0:
+                    self._cur_cmd=self._cur_cmd [:self._cur_cmd_pos-1] + self._cur_cmd[self._cur_cmd_pos:]
+                    self._cur_cmd_pos-=1
+                    self._update_cmd()
+                    self._update_cmd_pos()
+            elif c== "DELETE":
+                if self._cur_cmd_pos<len(self._cur_cmd):
+                    self._cur_cmd=self._cur_cmd [:self._cur_cmd_pos] + self._cur_cmd[self._cur_cmd_pos+1:]
+                    self._update_cmd()
+                    self._update_cmd_pos()
+            elif c== "LEFT":
+                if self._cur_cmd_pos>0:
+                    self._cur_cmd_pos-=1
+                    self._update_cmd_pos()
+            elif c== "RIGHT":
+                if self._cur_cmd_pos<len(self._cur_cmd):
+                    self._cur_cmd_pos+=1
+                    self._update_cmd_pos()
+            elif c== "UP":
+                if len(self._history_cmd)>0:
+                    if self._history_cmd_pos==-1:
+                        self._history_cmd_pos=len(self._history_cmd)
+                    if self._history_cmd_pos>0:
+                        self._clear_cmd()
+                        self._history_cmd_pos-=1
+                        self._cur_cmd=self._history_cmd[self._history_cmd_pos]
+                        self._cur_cmd_pos=len(self._cur_cmd)
+                        self._update_cmd()
+                        self._update_cmd_pos()
+            elif c== "DOWN":
+                if len(self._history_cmd)>0:
+                    if self._history_cmd_pos!=-1:
+                        if self._history_cmd_pos<len(self._history_cmd)-1:
+                            self._clear_cmd()
+                            self._history_cmd_pos+=1
+                            self._cur_cmd=self._history_cmd[self._history_cmd_pos]
+                            self._cur_cmd_pos=len(self._cur_cmd)
+                            self._update_cmd()
+                            self._update_cmd_pos()
+            elif c== "PAGEUP":
+                if len(self._history_cmd)>0:
+                    self._clear_cmd()
+                    self._history_cmd_pos=0
+                    self._cur_cmd=self._history_cmd[self._history_cmd_pos]
+                    self._cur_cmd_pos=len(self._cur_cmd)
+                    self._update_cmd()
+                    self._update_cmd_pos()
+            elif c== "PAGEDOWN":
+                if len(self._history_cmd)>0:
+                    self._clear_cmd()
+                    self._history_cmd_pos=len(self._history_cmd)-1
+                    self._cur_cmd=self._history_cmd[self._history_cmd_pos]
+                    self._cur_cmd_pos=len(self._cur_cmd)
+                    self._update_cmd()
+                    self._update_cmd_pos()
+            elif c== "HOME":
+                if self._cur_cmd_pos>0:
+                    self._cur_cmd_pos=0
+                    self._update_cmd_pos()
+            elif c== "END":
+                if self._cur_cmd_pos<len(self._cur_cmd):
+                    self._cur_cmd_pos=len(self._cur_cmd)
+                    self._update_cmd_pos()
+            elif c== "INSERT":
+                self._cur_cmd_ins_mode=not self._cur_cmd_ins_mode
+                self._update_cmd_pos()
+            elif c== "CTRL+C":
+                self._process.stdin.write("\x03")
+                self._process.stdin.flush()
+            else:
+                if len(c)==1:
+                    if not self._cur_cmd_ins_mode or self._cur_cmd_pos==len(self._cur_cmd):
+                        self._cur_cmd=self._cur_cmd [:self._cur_cmd_pos] + c + self._cur_cmd[self._cur_cmd_pos:]
+                    else:
+                        self._cur_cmd=self._cur_cmd [:self._cur_cmd_pos] + c + self._cur_cmd[self._cur_cmd_pos + 1:]
+                    self._cur_cmd_pos+=1
+                    self._update_cmd()
+                    self._update_cmd_pos()
+        finally:
+            self._semaphore.release()
+
     def write_char(self,  schr):
+        # Check if process has terminated
         poll = self._process.poll()
         if poll != None:
             raise Exception("Shell closed.") 
@@ -497,13 +614,13 @@ class Windows():
         try:
             if schr=="RETURN":
                 self._add_history_cmd()
-                #Invia il comando
+                #Send the command
                 self._process.stdin.write(self._cur_cmd.encode(self._chcp) + "\r\n")
                 self._process.stdin.flush()
                 self._cur_cmd=""
                 self._cur_cmd_pos=0
                 self._cur_cmd_notify=[]
-                time.sleep(0.1) #Attende 100 ms
+                time.sleep(0.1) #Wait 100 ms
             elif schr=="BACKSPACE": 
                 if self._cur_cmd_pos>0:
                     self._cur_cmd=self._cur_cmd [:self._cur_cmd_pos-1] + self._cur_cmd[self._cur_cmd_pos:]
@@ -677,7 +794,7 @@ class Windows():
         self._update_pos(self._cur_cmd_notify, itm)
         
     def _update_pos(self, ar, itm):
-        #Rimuove eventuali vecchie posizioni
+        #Removes any old positions
         for obj in ar:
             if obj['type'] == 'position':
                 ar.remove(obj)
@@ -693,7 +810,7 @@ class Windows():
             for i in range(len(ar)):
                 s=ar[i]
                 if len(s)>0:
-                    while (self._cur_col+len(s)>=self._col):
+                    while self._cur_col+len(s)>=self._col:
                         s1=s[:self._col-self._cur_col]
                         s2=s[self._col-self._cur_col:]
                         itm = {
@@ -740,30 +857,29 @@ class Windows():
                    }
                 self._update_pos(arret,  itm)
         return arret
-    
-    def read_update(self, inputs):
-        if inputs is not None:
-            inputs = inputs.split("|")
-            for i in range(len(inputs)):
-                schr=inputs[i]
-                if schr=="PIPE":
-                    schr="|"
-                self.write_char(schr)
+
+    def read_update(self):
         poll = self._process.poll()
         if poll != None:
             raise Exception("Shell closed.") 
         self._semaphore.acquire()
         try:
             data = self._pre_data + self._cur_file.read(1024*8)
+            self._cur_cmd += self._pre_data
             self._pre_data=""
-            if data.endswith("\r"):
-                data=data[:len(data)-1]
-                self._pre_data="\r"
-            return self._parse(data)
+            if data.startswith(self._cur_cmd + "\r\n"):
+                start=data.index("\r\n")
+                data=data[start:]
+                self._cur_cmd = ""
+            return data
+            # return self._parse(data)
         finally:
             self._semaphore.release()
 
-   
+    def change_rows_cols(self, rows, cols):
+        #fcntl.ioctl(self.pio, termios.TIOCSWINSZ, struct.pack("hhhh", rows, cols, 0, 0))
+        pass
+''' 
 if __name__ == "__main__":
     #a = os.popen('chcp')
     #chcp = a.read()
@@ -791,4 +907,4 @@ if __name__ == "__main__":
     #p.wait()
     #print po
     #print pe
-
+'''
