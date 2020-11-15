@@ -17,6 +17,7 @@ import subprocess
 import io
 import agent
 import json
+import tempfile
 
 try:
     import termios
@@ -131,7 +132,10 @@ class ShellManager(threading.Thread):
                     prprequest = json.loads(data.to_str("utf8"))
                     if prprequest["type"]==ShellManager.REQ_TYPE_INITIALIZE:
                         sid=prprequest["id"]
-                        shl = Linux(self, sid, prprequest["cols"], prprequest["rows"])
+                        if agent.is_windows():
+                            shl = Windows(sid, prprequest["cols"], prprequest["rows"])
+                        else:
+                            shl = Linux(self, sid, prprequest["cols"], prprequest["rows"])
                         shl.initialize()
                         self._shell_list[sid]=shl
                         self._semaphore.notifyAll()
@@ -366,7 +370,6 @@ class Linux():
         
         self._reader = io.open(pio, 'rb', closefd=False)
         self._writer = io.open(pio, 'wt', encoding="UTF-8", closefd=False)
- 
 
     def _processIsAlive(self):
         try:
@@ -613,8 +616,7 @@ class Windows():
                'len': self._col-cl
                }
         self._cur_cmd_notify.append(itm)
-        
-        
+
     def _update_cmd(self):
         s=self._cur_cmd
         rw=self._cur_row
@@ -680,8 +682,7 @@ class Windows():
             if obj['type'] == 'position':
                 ar.remove(obj)
         ar.append(itm)
-        
-    
+
     def _parse(self, s):
         arret=[]
         if len(self._cur_cmd_notify)>0:
@@ -761,8 +762,7 @@ class Windows():
             return self._parse(data)
         finally:
             self._semaphore.release()
-    
-'''
+
    
 if __name__ == "__main__":
     #a = os.popen('chcp')
@@ -791,5 +791,4 @@ if __name__ == "__main__":
     #p.wait()
     #print po
     #print pe
-    
-'''  
+

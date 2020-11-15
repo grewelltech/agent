@@ -7,6 +7,7 @@ If you prefer you can start the agent from the sources but you keep in mind in t
 - Install python2.7
 - Install g++/make (if Windows download [Mingw-w64](https://mingw-w64.org) version [64bit](https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/8.1.0/threads-win32/sjlj/) or [32bit](https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/mingw-builds/8.1.0/threads-win32/sjlj/))
 - Download agent source code ([zip](https://github.com/dwservice/agent/archive/master.zip) or git clone)
+- Install these packages on Linux libx11-dev libxpm-dev libxtst-dev
 - Execute these commands from agent/make:
 
 ```
