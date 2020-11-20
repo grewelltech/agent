@@ -432,6 +432,8 @@ class Windows():
     ACTION_ADD = "add"
     ACTION_BS = "backspace"
     ACTION_DEL = "del"
+    ACTION_LEFT = "left"
+    ACTION_RIGHT = "right"
 
     def __init__(self, sid, col, row):
         self._id=sid
@@ -503,20 +505,27 @@ class Windows():
 
     def write_inputs(self, input):
 
-        # TODO -
-        # handle limiting backspace to the number of chars typed
-        # handle limiting the right arrow to the right side of the current command
-        # handle clearing out the right side of the commands on backspace
         if self._bterm == None:
             return
 
         if not isinstance(input, unicode):
             input = input.decode("utf8")
 
+        ctrl = False
         for c in input:
-            print "char: " + hex(ord(c))
-            if 0x20 <= ord(c) <= 0x7e:
-                self._update_curr_cmd(self.ACTION_ADD, c)
+            if ord(c) == 0x1b:
+                ctrl = True
+            elif 0x20 <= ord(c) <= 0x7e:
+                if ctrl:
+                    if ord(c) == 0x44:
+                        self._update_curr_cmd(self.ACTION_LEFT)
+                    elif ord(c) == 0x43:
+                        self._update_curr_cmd(self.ACTION_RIGHT)
+                    elif ord(c) == 0x7e:
+                        self._cur_cmd_ins_mode = not self._cur_cmd_ins_mode
+                        print("mode insert: " + str(self._cur_cmd_ins_mode))
+                else:
+                    self._update_curr_cmd(self.ACTION_ADD, c)
             elif ord(c) == 0x10 or ord(c) == 0x7f:
                 self._update_curr_cmd(self.ACTION_BS)
             # elif ord(c) == 0x7f:                          # Windows sends the delete key as an escape sequence ESC D
@@ -528,50 +537,39 @@ class Windows():
                 pass
 
             else:
-                # 0x1b +A = up arrow
-                # 0x1b +B = down arrow
-                # 0x1b +D = left arrow
-                # 0x1b +C = right arrow
-                print "unknown char: " + hex(ord(c))
+                print("unknown char: " + hex(ord(c)))
 
-        print "current_cmd: " + self._cur_cmd
-
-        # if not isinstance(c, unicode):
-        #     c = c.decode("utf8")
-        # if c == "\r":
-        #     c = "\r\n"
-        # # else:
-        # #     self._pre_data = c
-        # self._process.stdin.write(c)
-        # self._process.stdin.flush()
 
     def _update_curr_cmd(self, action, c=None):
         if action == self.ACTION_ADD:
-            print("action=add")
             self._cur_cmd_pos += 1
             if self._cur_cmd_pos >= len(self._cur_cmd):
                 self._cur_cmd += c
+                self._pre_data += c
             else:
-                self._cur_cmd = self._cur_cmd[:self._cur_cmd_pos] + c + self._cur_cmd[self._cur_cmd_pos:]
-            self._pre_data += c
+                self._cur_cmd = self._cur_cmd[:self._cur_cmd_pos-1] + c + (self._cur_cmd[self._cur_cmd_pos:] if self._cur_cmd_ins_mode else self._cur_cmd[self._cur_cmd_pos-1:])
+                self._pre_data += c + self._cur_cmd[self._cur_cmd_pos:] + "\b" * (len(self._cur_cmd) - self._cur_cmd_pos)
         elif action == self.ACTION_DEL:
-            print("action=delete")
             self._cur_cmd_pos += 1
             if self._cur_cmd_pos >= len(self._cur_cmd):
                 self._cur_cmd = self._cur_cmd[:self._cur_cmd_pos]
             else:
                 self._cur_cmd = self._cur_cmd[:self._cur_cmd_pos-1] + self._cur_cmd[self._cur_cmd_pos:]
         elif action == self.ACTION_BS:
-            print("action=backspace")
             if self._cur_cmd_pos == 0:
                 return
-
             self._cur_cmd_pos -= 1
             if self._cur_cmd_pos >= len(self._cur_cmd):
                 self._cur_cmd = self._cur_cmd[:self._cur_cmd_pos]
             else:
                 self._cur_cmd = self._cur_cmd[:self._cur_cmd_pos] + self._cur_cmd[self._cur_cmd_pos+1:]
-            self._pre_data = '\b'
+            self._pre_data = "\b \b"
+        elif action == self.ACTION_LEFT:
+            self._cur_cmd_pos -=1
+            self._pre_data = chr(0x1b) + "[D"
+        elif action == self.ACTION_RIGHT:
+            self._cur_cmd_pos +=1
+            self._pre_data = chr(0x1b) + "[C"
 
     def _get_curr_cmd(self):
         self._last_cmd = self._cur_cmd
