@@ -18,6 +18,8 @@ import io
 import agent
 import json
 
+from app_shell.conptyshell import ConPtyShell
+
 try:
     import termios
     import pty
@@ -310,7 +312,7 @@ class Linux():
     def initialize(self):
         
         ppid, pio = pty.fork()
-        if ppid == 0: #Processo figlo
+        if ppid == 0: #Child process
             
             stdin = 0
             stdout = 1
@@ -366,7 +368,6 @@ class Linux():
         
         self._reader = io.open(pio, 'rb', closefd=False)
         self._writer = io.open(pio, 'wt', encoding="UTF-8", closefd=False)
- 
 
     def _processIsAlive(self):
         try:
@@ -418,50 +419,23 @@ class Linux():
         return self._reader.read()
 
                 
-'''class Windows():
+class Windows():
 
     def __init__(self, sid, col, row):
         self._id=sid
         self._col=col
         self._row=row
-        self._cur_file = None
-        self._cur_row = 0
-        self._cur_col = 0
-        self._cur_cmd = ""
-        self._cur_cmd_pos = 0
-        self._cur_cmd_ins_mode=False
-        self._cur_cmd_notify = []
-        self._history_cmd= []
-        self._history_cmd_pos = -1
-        self._history_cmd_max = 5
+        self._path = "powershell.exe"
         self._bterm = False
         self._semaphore = threading.Condition()
-        self._pre_data = ""
-        
+        self._pty = ConPtyShell(col, row)
+
     def get_id(self):
         return self._id
-    
+
     def initialize(self):
-        #Legge il codepage di cmd
-        a = os.popen('chcp')
-        self._chcp = a.read()
-        a.close()
-        self._chcp="cp" + self._chcp.split(":")[1].strip()
-        
-        #Crea file di output
-        tn=tempfile.mkstemp()[1]
-        self._tfile =  codecs.open(tn, 'wb')
-        si = subprocess.STARTUPINFO()
-        si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        si.wShowWindow = subprocess.SW_HIDE
-        self._process = subprocess.Popen(['cmd.exe'], shell=False, 
-                                       stdin=subprocess.PIPE, stdout=self._tfile, 
-                                       stderr=subprocess.STDOUT,  startupinfo=si)
-        
-                                       
-        self._cur_file = codecs.open(tn, 'r', self._chcp)
-        #self._process.stdin.write("MODE CON: COLS=" + str(self._col)+ " LINES=" + str(self._row) + "\n")
-    
+        pass
+
     def terminate(self):
         self._bterm=True
         self._cur_file.close()
@@ -482,287 +456,21 @@ class Linux():
             except:
                 None
             self._tfile.close()
-    
+
     def is_terminate(self):
         return self._bterm
-    
-    def write_char(self,  schr):
-        poll = self._process.poll()
-        if poll != None:
-            raise Exception("Shell closed.") 
-        self._semaphore.acquire()
-        try:
-            if schr=="RETURN":
-                self._add_history_cmd()
-                #Invia il comando
-                self._process.stdin.write(self._cur_cmd.encode(self._chcp) + "\r\n")
-                self._process.stdin.flush()
-                self._cur_cmd=""
-                self._cur_cmd_pos=0
-                self._cur_cmd_notify=[]
-                time.sleep(0.1) #Attende 100 ms
-            elif schr=="BACKSPACE": 
-                if self._cur_cmd_pos>0:
-                    self._cur_cmd=self._cur_cmd [:self._cur_cmd_pos-1] + self._cur_cmd[self._cur_cmd_pos:]
-                    self._cur_cmd_pos-=1
-                    self._update_cmd()
-                    self._update_cmd_pos()
-            elif schr=="DELETE": 
-                if self._cur_cmd_pos<len(self._cur_cmd):
-                    self._cur_cmd=self._cur_cmd [:self._cur_cmd_pos] + self._cur_cmd[self._cur_cmd_pos+1:]
-                    self._update_cmd()
-                    self._update_cmd_pos()
-            elif schr=="LEFT": 
-                if self._cur_cmd_pos>0:
-                    self._cur_cmd_pos-=1
-                    self._update_cmd_pos()
-            elif schr=="RIGHT": 
-                if self._cur_cmd_pos<len(self._cur_cmd):
-                    self._cur_cmd_pos+=1
-                    self._update_cmd_pos()
-            elif schr=="UP": 
-                if len(self._history_cmd)>0:
-                    if self._history_cmd_pos==-1:
-                        self._history_cmd_pos=len(self._history_cmd)
-                    if self._history_cmd_pos>0:
-                        self._clear_cmd()
-                        self._history_cmd_pos-=1
-                        self._cur_cmd=self._history_cmd[self._history_cmd_pos]
-                        self._cur_cmd_pos=len(self._cur_cmd)
-                        self._update_cmd()
-                        self._update_cmd_pos()  
-            elif schr=="DOWN":
-                if len(self._history_cmd)>0:
-                    if self._history_cmd_pos!=-1:
-                        if self._history_cmd_pos<len(self._history_cmd)-1:
-                            self._clear_cmd()
-                            self._history_cmd_pos+=1
-                            self._cur_cmd=self._history_cmd[self._history_cmd_pos]
-                            self._cur_cmd_pos=len(self._cur_cmd)
-                            self._update_cmd()
-                            self._update_cmd_pos()
-            elif schr=="PAGEUP": 
-                if len(self._history_cmd)>0:
-                    self._clear_cmd()
-                    self._history_cmd_pos=0
-                    self._cur_cmd=self._history_cmd[self._history_cmd_pos]
-                    self._cur_cmd_pos=len(self._cur_cmd)
-                    self._update_cmd()
-                    self._update_cmd_pos()
-            elif schr=="PAGEDOWN": 
-                if len(self._history_cmd)>0:
-                    self._clear_cmd()
-                    self._history_cmd_pos=len(self._history_cmd)-1
-                    self._cur_cmd=self._history_cmd[self._history_cmd_pos]
-                    self._cur_cmd_pos=len(self._cur_cmd)
-                    self._update_cmd()
-                    self._update_cmd_pos()
-            elif schr=="HOME": 
-                if self._cur_cmd_pos>0:
-                    self._cur_cmd_pos=0
-                    self._update_cmd_pos()
-            elif schr=="END": 
-                if self._cur_cmd_pos<len(self._cur_cmd):
-                    self._cur_cmd_pos=len(self._cur_cmd)
-                    self._update_cmd_pos()
-            elif schr=="INSERT": 
-                self._cur_cmd_ins_mode=not self._cur_cmd_ins_mode
-                self._update_cmd_pos()
-            elif schr=="CTRL+C": 
-                self._process.stdin.write("\x03")
-                self._process.stdin.flush()
-            else:
-                if len(schr)==1:
-                    if not self._cur_cmd_ins_mode or self._cur_cmd_pos==len(self._cur_cmd):
-                        self._cur_cmd=self._cur_cmd [:self._cur_cmd_pos] + schr + self._cur_cmd[self._cur_cmd_pos:]
-                    else:
-                        self._cur_cmd=self._cur_cmd [:self._cur_cmd_pos] + schr + self._cur_cmd[self._cur_cmd_pos+1:]
-                    self._cur_cmd_pos+=1
-                    self._update_cmd()
-                    self._update_cmd_pos()
-        finally:
-            self._semaphore.release()                
-    
-    def _add_history_cmd(self):
-        self._history_cmd_pos=-1
-        if self._cur_cmd.strip()!="":
-            if len(self._history_cmd)==0 or self._history_cmd[len(self._history_cmd)-1].strip()!=self._cur_cmd.strip():
-                self._history_cmd.append(self._cur_cmd)
-                if len(self._history_cmd)>self._history_cmd_max:
-                    del self._history_cmd[0]
-    
-    def _clear_cmd(self):
-        s=self._cur_cmd
-        rw=self._cur_row
-        cl=self._cur_col
-        while (cl+len(s)>=self._col):
-            itm = {
-                   'type': 'remove', 
-                   'row': rw, 
-                   'col': cl,  
-                   'len': self._col-cl
-                   }
-            self._cur_cmd_notify.append(itm)
-            rw+=1
-            cl=0
-            s=s[self._col-cl:]
-        itm = {
-               'type': 'remove', 
-               'row': rw, 
-               'col': cl,  
-               'len': self._col-cl
-               }
-        self._cur_cmd_notify.append(itm)
-        
-        
-    def _update_cmd(self):
-        s=self._cur_cmd
-        rw=self._cur_row
-        cl=self._cur_col
-        while (cl+len(s)>=self._col):
-            s1=s[:self._col-cl]
-            s2=s[self._col-cl:]
-            itm = {
-                   'type': 'update', 
-                   'row': rw, 
-                   'col': cl,  
-                   'text': s1
-                   }
-            self._cur_cmd_notify.append(itm)
-            if rw<self._row-1:
-                    rw+=1
-            else:
-                self._cur_row-=1
-                itm = {
-                    'type': 'scroll', 
-                    'row': 1
-                }
-                self._cur_cmd_notify.append(itm)
-            cl=0
-            s=s2
-        itm = {
-               'type': 'update', 
-               'row': rw, 
-               'col': cl,  
-               'text': s
-               }
-        self._cur_cmd_notify.append(itm)
-        lnrem=self._col-(cl+len(s));
-        if lnrem>0:
-            itm = {
-               'type': 'remove', 
-               'row': rw, 
-               'col': cl+len(s),  
-               'len': lnrem
-               }
-        self._cur_cmd_notify.append(itm)
-                
-    def _update_cmd_pos(self):
-        ps=self._cur_cmd_pos
-        cl=self._cur_col
-        rw=self._cur_row
-        while (cl+ps>=self._col):
-            ps-=(self._col-cl)
-            if rw<self._row-1:
-                rw+=1
-            cl=0
-        itm = {
-            'type': 'position', 
-            'row': rw, 
-            'col': cl+ps, 
-            'ins': self._cur_cmd_ins_mode
-           }
-        self._update_pos(self._cur_cmd_notify, itm)
-        
-    def _update_pos(self, ar, itm):
-        #Rimuove eventuali vecchie posizioni
-        for obj in ar:
-            if obj['type'] == 'position':
-                ar.remove(obj)
-        ar.append(itm)
-        
-    
-    def _parse(self, s):
-        arret=[]
-        if len(self._cur_cmd_notify)>0:
-            arret=self._cur_cmd_notify
-            self._cur_cmd_notify=[]
-        if s!="":
-            ar = s.splitlines()
-            for i in range(len(ar)):
-                s=ar[i]
-                if len(s)>0:
-                    while (self._cur_col+len(s)>=self._col):
-                        s1=s[:self._col-self._cur_col]
-                        s2=s[self._col-self._cur_col:]
-                        itm = {
-                               'type': 'update', 
-                               'row': self._cur_row, 
-                               'col': self._cur_col,  
-                               'text': s1
-                               }
-                        arret.append(itm)
-                        if self._cur_row<self._row-1:
-                            self._cur_row+=1
-                        else:
-                            itm = {
-                            'type': 'scroll', 
-                            'row': 1
-                            }
-                            arret.append(itm)
-                        self._cur_col=0
-                        s=s2
-                    if len(s)>0:
-                        itm = {
-                               'type': 'update', 
-                               'row': self._cur_row, 
-                               'col': self._cur_col,  
-                               'text': s
-                               }
-                        arret.append(itm)
-                        self._cur_col+=len(s)
-                if i<len(ar)-1:
-                    if self._cur_row<self._row-1:
-                        self._cur_row+=1
-                    else:
-                        itm = {
-                           'type': 'scroll', 
-                           'row': 1
-                        }
-                        arret.append(itm)
-                    self._cur_col=0
-                itm = {
-                   'type': 'position', 
-                   'row': self._cur_row, 
-                   'col': self._cur_col, 
-                   'ins': self._cur_cmd_ins_mode
-                   }
-                self._update_pos(arret,  itm)
-        return arret
-    
-    def read_update(self, inputs):
-        if inputs is not None:
-            inputs = inputs.split("|")
-            for i in range(len(inputs)):
-                schr=inputs[i]
-                if schr=="PIPE":
-                    schr="|"
-                self.write_char(schr)
-        poll = self._process.poll()
-        if poll != None:
-            raise Exception("Shell closed.") 
-        self._semaphore.acquire()
-        try:
-            data = self._pre_data + self._cur_file.read(1024*8)
-            self._pre_data=""
-            if data.endswith("\r"):
-                data=data[:len(data)-1]
-                self._pre_data="\r"
-            return self._parse(data)
-        finally:
-            self._semaphore.release()
-    
 
+    def change_rows_cols(self, rows, cols):
+        pass
+
+    def write_inputs(self, c):
+        pass
+
+    def read_update(self):
+        pass
+
+
+'''
    
 if __name__ == "__main__":
     #a = os.popen('chcp')

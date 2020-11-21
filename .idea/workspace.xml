@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="4ba049d2-d459-4466-b27f-366ec0215ae3" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/app_shell/conptyshell.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app_shell/shell.py" beforeDir="false" afterPath="$PROJECT_DIR$/app_shell/shell.py" afterDir="false" />
+    </list>
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileEditorManager">
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/app_desktop/desktop.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state>
+              <folding>
+                <element signature="e#227#239#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/app_shell/config.json">
+          <provider selected="true" editor-type-id="text-editor" />
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/app_shell/shell.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="775">
+              <caret line="469" column="12" selection-start-line="469" selection-start-column="8" selection-end-line="469" selection-end-column="12" />
+              <folding>
+                <element signature="e#25#225#1" />
+                <element signature="e#227#243#0" expanded="true" />
+                <element signature="e#382#446#0" />
+                <element signature="e#529#2399#0" />
+                <element signature="e#569#673#0" />
+                <element signature="e#717#962#0" />
+                <element signature="e#744#930#0" />
+                <element signature="e#808#862#0" />
+                <element signature="e#1012#1464#0" />
+                <element signature="e#1229#1464#0" />
+                <element signature="e#1299#1464#0" />
+                <element signature="e#1527#1585#0" />
+                <element signature="e#1648#2070#0" />
+                <element signature="e#1742#1971#0" />
+                <element signature="e#1770#1971#0" />
+                <element signature="e#1862#1971#0" />
+                <element signature="e#2123#2296#0" />
+                <element signature="e#2179#2236#0" />
+                <element signature="e#2362#2399#0" />
+                <element signature="e#3115#3130#0" />
+                <element signature="e#3169#3187#0" />
+                <element signature="e#3247#5411#0" />
+                <element signature="e#3298#5356#0" />
+                <element signature="e#3335#5356#0" />
+                <element signature="e#3360#5170#0" />
+                <element signature="e#3611#3861#0" />
+                <element signature="e#3964#4244#0" />
+                <element signature="e#4065#4244#0" />
+                <element signature="e#4344#4631#0" />
+                <element signature="e#4445#4631#0" />
+                <element signature="e#4741#5087#0" />
+                <element signature="e#4842#5087#0" />
+                <element signature="e#5231#5356#0" />
+                <element signature="e#9033#9050#0" />
+                <element signature="e#9089#9212#0" />
+                <element signature="e#9250#9837#0" />
+                <element signature="e#9287#9837#0" />
+                <element signature="e#9332#9558#0" />
+                <element signature="e#9653#9715#0" />
+                <element signature="e#9875#10035#0" />
+                <element signature="e#10335#10350#0" />
+                <element signature="e#10392#11538#0" />
+                <element signature="e#10409#10741#0" />
+                <element signature="e#10593#10741#0" />
+                <element signature="e#10817#11485#0" />
+                <element signature="e#10991#11485#0" />
+                <element signature="e#11070#11239#0" />
+                <element signature="e#11343#11485#0" />
+                <element signature="e#11587#13948#0" />
+                <element signature="e#11986#12097#0" />
+                <element signature="e#13991#14184#0" />
+                <element signature="e#14008#14135#0" />
+                <element signature="e#14227#14530#0" />
+                <element signature="e#14349#14411#0" />
+                <element signature="e#14459#14530#0" />
+                <element signature="e#14592#14702#0" />
+                <element signature="e#14635#14675#0" />
+                <element signature="e#14760#14840#0" />
+                <element signature="e#14897#15120#0" />
+                <element signature="e#15157#15561#0" />
+                <element signature="e#15157#15179#0" />
+                <element signature="e#16146#16161#0" />
+                <element signature="e#15895#15899#0" />
+                <element signature="e#17034#17549#0" />
+                <element signature="e#17335#17549#0" />
+                <element signature="e#17587#17605#0" />
+                <element signature="e#16559#16563#0" />
+                <element signature="e#27911#28676#1" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/README.md">
+          <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+            <state split_layout="SPLIT">
+              <first_editor />
+              <second_editor />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/core/agent.py">
+          <provider selected="true" editor-type-id="text-editor" />
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/lib_gdi/src/macgdi.m">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="6027">
+              <caret line="287" column="1" lean-forward="true" selection-start-line="287" selection-start-column="1" selection-end-line="287" selection-end-column="1" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/os_mac/DWAgent.app/Contents/MacOS/DWAgent">
+          <provider selected="true" editor-type-id="text-editor" />
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/app_shell/.pydevproject">
+          <provider selected="true" editor-type-id="text-editor" />
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/app_shell/.project">
+          <provider selected="true" editor-type-id="text-editor" />
+        </entry>
+      </file>
+    </leaf>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="master" />
+      </map>
+    </option>
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/app_shell/shell.py" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectConfigurationFiles">
+    <option name="files">
+      <list>
+        <option value="$PROJECT_DIR$/.idea/agent.iml" />
+        <option value="$PROJECT_DIR$/.idea/misc.xml" />
+        <option value="$PROJECT_DIR$/.idea/vcs.xml" />
+        <option value="$PROJECT_DIR$/.idea/modules.xml" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectFrameBounds">
+    <option name="x" value="-7" />
+    <option name="width" value="1934" />
+    <option name="height" value="1567" />
+  </component>
+  <component name="ProjectView">
+    <navigator proportions="" version="1">
+      <foldersAlwaysOnTop value="true" />
+    </navigator>
+    <panes>
+      <pane id="Scope" />
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="agent" type="b2602c69:ProjectViewProjectNode" />
+              <item name="agent" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="agent" type="b2602c69:ProjectViewProjectNode" />
+              <item name="agent" type="462c0819:PsiDirectoryNode" />
+              <item name="app_shell" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/app_shell" />
+    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
+    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\bgrew\source\repos\agent\app_shell" />
+    </key>
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="4ba049d2-d459-4466-b27f-366ec0215ae3" name="Default Changelist" comment="" />
+      <created>1605390034141</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1605390034141</updated>
+      <workItem from="1605390057866" duration="651000" />
+      <workItem from="1605906652844" duration="5208000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TimeTrackingManager">
+    <option name="totallyTimeSpent" value="5859000" />
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="-7" y="0" width="1934" height="1567" extended-state="0" />
+    <editor active="true" />
+    <layout>
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.2524013" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" />
+      <window_info anchor="bottom" id="Run" order="2" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Version Control" order="8" weight="0.32986832" />
+      <window_info anchor="bottom" id="Database Changes" order="9" />
+      <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
+      <window_info anchor="bottom" id="Terminal" order="11" visible="true" weight="0.3298466" />
+      <window_info anchor="bottom" id="Python Console" order="12" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" id="SciView" order="3" />
+      <window_info anchor="right" id="Database" order="4" />
+    </layout>
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/app_desktop/desktop.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <folding>
+            <element signature="e#227#239#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app_shell/config.json">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/README.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor />
+          <second_editor />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/core/agent.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib_gdi/src/macgdi.m">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="6027">
+          <caret line="287" column="1" lean-forward="true" selection-start-line="287" selection-start-column="1" selection-end-line="287" selection-end-column="1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/os_mac/DWAgent.app/Contents/MacOS/DWAgent">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app_shell/.pydevproject">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app_shell/.project">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/os_win_launcher/src/main.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="294">
+          <caret line="14" column="53" lean-forward="true" selection-start-line="14" selection-start-column="53" selection-end-line="14" selection-end-column="53" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app_shell/conptyshell.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1">
+          <folding>
+            <element signature="e#0#16#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app_shell/shell.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="775">
+          <caret line="469" column="12" selection-start-line="469" selection-start-column="8" selection-end-line="469" selection-end-column="12" />
+          <folding>
+            <element signature="e#25#225#1" />
+            <element signature="e#227#243#0" expanded="true" />
+            <element signature="e#382#446#0" />
+            <element signature="e#529#2399#0" />
+            <element signature="e#569#673#0" />
+            <element signature="e#717#962#0" />
+            <element signature="e#744#930#0" />
+            <element signature="e#808#862#0" />
+            <element signature="e#1012#1464#0" />
+            <element signature="e#1229#1464#0" />
+            <element signature="e#1299#1464#0" />
+            <element signature="e#1527#1585#0" />
+            <element signature="e#1648#2070#0" />
+            <element signature="e#1742#1971#0" />
+            <element signature="e#1770#1971#0" />
+            <element signature="e#1862#1971#0" />
+            <element signature="e#2123#2296#0" />
+            <element signature="e#2179#2236#0" />
+            <element signature="e#2362#2399#0" />
+            <element signature="e#3115#3130#0" />
+            <element signature="e#3169#3187#0" />
+            <element signature="e#3247#5411#0" />
+            <element signature="e#3298#5356#0" />
+            <element signature="e#3335#5356#0" />
+            <element signature="e#3360#5170#0" />
+            <element signature="e#3611#3861#0" />
+            <element signature="e#3964#4244#0" />
+            <element signature="e#4065#4244#0" />
+            <element signature="e#4344#4631#0" />
+            <element signature="e#4445#4631#0" />
+            <element signature="e#4741#5087#0" />
+            <element signature="e#4842#5087#0" />
+            <element signature="e#5231#5356#0" />
+            <element signature="e#9033#9050#0" />
+            <element signature="e#9089#9212#0" />
+            <element signature="e#9250#9837#0" />
+            <element signature="e#9287#9837#0" />
+            <element signature="e#9332#9558#0" />
+            <element signature="e#9653#9715#0" />
+            <element signature="e#9875#10035#0" />
+            <element signature="e#10335#10350#0" />
+            <element signature="e#10392#11538#0" />
+            <element signature="e#10409#10741#0" />
+            <element signature="e#10593#10741#0" />
+            <element signature="e#10817#11485#0" />
+            <element signature="e#10991#11485#0" />
+            <element signature="e#11070#11239#0" />
+            <element signature="e#11343#11485#0" />
+            <element signature="e#11587#13948#0" />
+            <element signature="e#11986#12097#0" />
+            <element signature="e#13991#14184#0" />
+            <element signature="e#14008#14135#0" />
+            <element signature="e#14227#14530#0" />
+            <element signature="e#14349#14411#0" />
+            <element signature="e#14459#14530#0" />
+            <element signature="e#14592#14702#0" />
+            <element signature="e#14635#14675#0" />
+            <element signature="e#14760#14840#0" />
+            <element signature="e#14897#15120#0" />
+            <element signature="e#15157#15561#0" />
+            <element signature="e#15157#15179#0" />
+            <element signature="e#16146#16161#0" />
+            <element signature="e#15895#15899#0" />
+            <element signature="e#17034#17549#0" />
+            <element signature="e#17335#17549#0" />
+            <element signature="e#17587#17605#0" />
+            <element signature="e#16559#16563#0" />
+            <element signature="e#27911#28676#1" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+  </component>
+</project>
