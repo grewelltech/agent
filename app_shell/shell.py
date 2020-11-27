@@ -12,12 +12,15 @@ import sys
 import struct
 import signal
 import time
-import codecs
 import subprocess
 import io
 import agent
 import json
-import tempfile
+
+try:
+    from lib_pyconpty import conpty
+except Exception as ex:
+    print('failed to load ConPty: ' + str(ex))
 
 try:
     import ctypes
@@ -447,442 +450,38 @@ class Windows():
         self._bterm = False
         self._semaphore = threading.Condition()
         self._pre_data = ""
+        self._cmd = "cmd.exe"
+        self._pty = None
         
     def get_id(self):
         return self._id
     
     def initialize(self):
-        #Get character set
-        a = os.popen('chcp')
-        self._chcp = a.read()
-        a.close()
-        self._chcp="cp" + self._chcp.split(":")[1].strip()
-        
-        #Create output file
-        tn=tempfile.mkstemp()[1]
-        print "tempfile: " + tn
-        self._tfile = codecs.open(tn, 'wb')
-        si = subprocess.STARTUPINFO()
-        si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        si.wShowWindow = subprocess.SW_HIDE
-        self._process = subprocess.Popen(['cmd.exe'], shell=False, 
-                                       stdin=subprocess.PIPE, stdout=self._tfile, 
-                                       stderr=subprocess.STDOUT,  startupinfo=si)
-        
-                                       
-        self._cur_file = codecs.open(tn, 'r', self._chcp)
-        #self._process.stdin.write("MODE CON: COLS=" + str(self._col)+ " LINES=" + str(self._row) + "\n")
+        print('setting up ConPty')
+        self._pty = conpty.ConPty(self._cmd, self._col, self._row)
+        self._pty.start()
+        print('ConPty setup')
 
     def terminate(self):
         self._bterm=True
-        self._cur_file.close()
-        try:
-            self._process.stdin.write("exit\r\n")
-            self._process.stdin.flush()
-            time.sleep(0.5) #Attende 500 ms
-        except:
-            None
-        poll = self._process.poll()
-        if poll == None:
-            try:
-                self._process.terminate()
-            except:
-                None
-            try:
-                self._process.kill()
-            except:
-                None
-            self._tfile.close()
+        self._pty.close()
     
     def is_terminate(self):
         return self._bterm
 
-    def write_inputs(self, input):
-
+    def write_inputs(self, c):
         if self._bterm == None:
             return
-
-        if not isinstance(input, unicode):
-            input = input.decode("utf8")
-
-        #todo: this is fragile right now, it's only finding the ctrl character then looking for a match, there is a lot
-        #      of special "keys" that use the control characters and have the same characters after the escape. Need to
-        #      match all of the characters. Example 'Page Up' ESC [ 5 ~ and 'Page Down' ESC [ 6 ~ and 'Insert' ESC [ 2 ~
-        ctrl = False
-        for c in input:
-            if ord(c) == 0x1b:
-                ctrl = True
-            elif 0x20 <= ord(c) <= 0x7e:
-                if ctrl:
-                    if ord(c) == 0x46:
-                        self.write_char("END")
-                    elif ord(c) == 0x48:
-                        self.write_char("HOME")
-                    elif ord(c) == 0x44:
-                        self.write_char("LEFT")
-                        self._pre_data = chr(0x1b) + "[D"
-                    elif ord(c) == 0x43:
-                        self.write_char("RIGHT")
-                        self._pre_data = chr(0x1b) + "[C"
-                    elif ord(c) == 0x42:
-                        self.write_char("DOWN")
-                        self._pre_data = chr(0x1b) + "[B"
-                    elif ord(c) == 0x41:
-                        self.write_char("UP")
-                        self._pre_data = chr(0x1b) + "[A"
-                    elif ord(c) == 0x7e:
-                        self.write_char("INSERT")
-                else:
-                    self.write_char(c)
-                    self._pre_data = c
-            elif ord(c) == 0x10 or ord(c) == 0x7f:
-                self.write_char("BACKSPACE")
-                self._pre_data = "\b \b"
-            # elif ord(c) == 0x7f:                          # Windows sends the delete key as an escape sequence ESC D
-            #     self._update_curr_cmd(self.ACTION_DEL)
-            elif ord(c) == 0x0d:
-                self._user_input = self._cur_cmd
-                self.write_char("RETURN")
-            elif ord(c) == 0x0a:
-                pass
-
-            else:
-                print("unknown char: " + hex(ord(c)))
-                self.write_char(c)
-
-    def _add_history_cmd(self):
-        self._history_cmd_pos = -1
-        if self._cur_cmd.strip() != "":
-            if len(self._history_cmd) == 0 or self._history_cmd[
-                len(self._history_cmd) - 1].strip() != self._cur_cmd.strip():
-                self._history_cmd.append(self._cur_cmd)
-                if len(self._history_cmd) > self._history_cmd_max:
-                    del self._history_cmd[0]
-
-    def _clear_cmd(self):
-        s = self._cur_cmd
-        rw = self._cur_row
-        cl = self._cur_col
-        while (cl + len(s) >= self._col):
-            itm = {
-                'type': 'remove',
-                'row': rw,
-                'col': cl,
-                'len': self._col - cl
-            }
-            self._cur_cmd_notify.append(itm)
-            rw += 1
-            cl = 0
-            s = s[self._col - cl:]
-        itm = {
-            'type': 'remove',
-            'row': rw,
-            'col': cl,
-            'len': self._col - cl
-        }
-        self._cur_cmd_notify.append(itm)
-
-    def _update_cmd(self):
-        s=self._cur_cmd
-        rw=self._cur_row
-        cl=self._cur_col
-        while (cl+len(s)>=self._col):
-            s1=s[:self._col-cl]
-            s2=s[self._col-cl:]
-            itm = {
-                   'type': 'update',
-                   'row': rw,
-                   'col': cl,
-                   'text': s1
-                   }
-            self._cur_cmd_notify.append(itm)
-            if rw<self._row-1:
-                    rw+=1
-            else:
-                self._cur_row-=1
-                itm = {
-                    'type': 'scroll',
-                    'row': 1
-                }
-                self._cur_cmd_notify.append(itm)
-            cl=0
-            s=s2
-        itm = {
-               'type': 'update',
-               'row': rw,
-               'col': cl,
-               'text': s
-               }
-        self._cur_cmd_notify.append(itm)
-        lnrem=self._col-(cl+len(s));
-        if lnrem>0:
-            itm = {
-               'type': 'remove',
-               'row': rw,
-               'col': cl+len(s),
-               'len': lnrem
-               }
-        self._cur_cmd_notify.append(itm)
-
-    def _update_cmd_pos(self):
-        ps = self._cur_cmd_pos
-        cl = self._cur_col
-        rw = self._cur_row
-        while (cl + ps >= self._col):
-            ps -= (self._col - cl)
-            if rw < self._row - 1:
-                rw += 1
-            cl = 0
-        itm = {
-            'type': 'position',
-            'row': rw,
-            'col': cl + ps,
-            'ins': self._cur_cmd_ins_mode
-        }
-        self._update_pos(self._cur_cmd_notify, itm)
-
-    def _update_pos(self, ar, itm):
-        # Rimuove eventuali vecchie posizioni
-        for obj in ar:
-            if obj['type'] == 'position':
-                ar.remove(obj)
-        ar.append(itm)
-
-    def _update_curr_cmd(self, action, c=None):
-        if action == self.ACTION_ADD:
-            self._cur_cmd_pos += 1
-            if self._cur_cmd_pos >= len(self._cur_cmd):
-                self._cur_cmd += c
-                self._pre_data += c
-            else:
-                self._cur_cmd = self._cur_cmd[:self._cur_cmd_pos-1] + c + (self._cur_cmd[self._cur_cmd_pos:] if self._cur_cmd_ins_mode else self._cur_cmd[self._cur_cmd_pos-1:])
-                self._pre_data += c + self._cur_cmd[self._cur_cmd_pos:] + "\b" * (len(self._cur_cmd) - self._cur_cmd_pos)
-        elif action == self.ACTION_DEL:
-            self._cur_cmd_pos += 1
-            if self._cur_cmd_pos >= len(self._cur_cmd):
-                self._cur_cmd = self._cur_cmd[:self._cur_cmd_pos]
-            else:
-                self._cur_cmd = self._cur_cmd[:self._cur_cmd_pos-1] + self._cur_cmd[self._cur_cmd_pos:]
-        elif action == self.ACTION_BS:
-            if self._cur_cmd_pos == 0:
-                return
-            self._cur_cmd_pos -= 1
-            if self._cur_cmd_pos >= len(self._cur_cmd):
-                self._cur_cmd = self._cur_cmd[:self._cur_cmd_pos]
-            else:
-                self._cur_cmd = self._cur_cmd[:self._cur_cmd_pos] + self._cur_cmd[self._cur_cmd_pos+1:]
-            self._pre_data = "\b \b"
-        elif action == self.ACTION_LEFT:
-            self._cur_cmd_pos -=1
-            self._pre_data = chr(0x1b) + "[D"
-        elif action == self.ACTION_RIGHT:
-            self._cur_cmd_pos +=1
-            self._pre_data = chr(0x1b) + "[C"
-
-    def _get_curr_cmd(self):
-        self._user_input = self._cur_cmd
-        cmd = self._cur_cmd.encode(self._chcp) + "\r\n"
-        self._cur_cmd = ""
-        self._cur_cmd_pos = 0
-        return cmd
-
-    def write_char(self,  schr):
-        # Check if process has terminated
-        poll = self._process.poll()
-        if poll != None:
-            raise Exception("Shell closed.") 
-        self._semaphore.acquire()
-        try:
-            if schr=="RETURN":
-                self._add_history_cmd()
-                #Send the command
-                self._process.stdin.write(self._cur_cmd.encode(self._chcp) + "\r\n")
-                self._process.stdin.flush()
-                self._cur_cmd=""
-                self._cur_cmd_pos=0
-                self._cur_cmd_notify=[]
-                time.sleep(0.1) #Wait 100 ms
-            elif schr=="BACKSPACE": 
-                if self._cur_cmd_pos>0:
-                    self._cur_cmd=self._cur_cmd [:self._cur_cmd_pos-1] + self._cur_cmd[self._cur_cmd_pos:]
-                    self._cur_cmd_pos-=1
-                    self._update_cmd()
-                    self._update_cmd_pos()
-            elif schr=="DELETE": 
-                if self._cur_cmd_pos<len(self._cur_cmd):
-                    self._cur_cmd=self._cur_cmd [:self._cur_cmd_pos] + self._cur_cmd[self._cur_cmd_pos+1:]
-                    self._update_cmd()
-                    self._update_cmd_pos()
-            elif schr=="LEFT": 
-                if self._cur_cmd_pos>0:
-                    self._cur_cmd_pos-=1
-                    self._update_cmd_pos()
-            elif schr=="RIGHT": 
-                if self._cur_cmd_pos<len(self._cur_cmd):
-                    self._cur_cmd_pos+=1
-                    self._update_cmd_pos()
-            elif schr=="UP": 
-                if len(self._history_cmd)>0:
-                    if self._history_cmd_pos==-1:
-                        self._history_cmd_pos=len(self._history_cmd)
-                    if self._history_cmd_pos>0:
-                        self._clear_cmd()
-                        self._history_cmd_pos-=1
-                        self._cur_cmd=self._history_cmd[self._history_cmd_pos]
-                        self._cur_cmd_pos=len(self._cur_cmd)
-                        self._update_cmd()
-                        self._update_cmd_pos()  
-            elif schr=="DOWN":
-                if len(self._history_cmd)>0:
-                    if self._history_cmd_pos!=-1:
-                        if self._history_cmd_pos<len(self._history_cmd)-1:
-                            self._clear_cmd()
-                            self._history_cmd_pos+=1
-                            self._cur_cmd=self._history_cmd[self._history_cmd_pos]
-                            self._cur_cmd_pos=len(self._cur_cmd)
-                            self._update_cmd()
-                            self._update_cmd_pos()
-            elif schr=="PAGEUP": 
-                if len(self._history_cmd)>0:
-                    self._clear_cmd()
-                    self._history_cmd_pos=0
-                    self._cur_cmd=self._history_cmd[self._history_cmd_pos]
-                    self._cur_cmd_pos=len(self._cur_cmd)
-                    self._update_cmd()
-                    self._update_cmd_pos()
-            elif schr=="PAGEDOWN": 
-                if len(self._history_cmd)>0:
-                    self._clear_cmd()
-                    self._history_cmd_pos=len(self._history_cmd)-1
-                    self._cur_cmd=self._history_cmd[self._history_cmd_pos]
-                    self._cur_cmd_pos=len(self._cur_cmd)
-                    self._update_cmd()
-                    self._update_cmd_pos()
-            elif schr=="HOME": 
-                if self._cur_cmd_pos>0:
-                    self._cur_cmd_pos=0
-                    self._update_cmd_pos()
-            elif schr=="END": 
-                if self._cur_cmd_pos<len(self._cur_cmd):
-                    self._cur_cmd_pos=len(self._cur_cmd)
-                    self._update_cmd_pos()
-            elif schr=="INSERT": 
-                self._cur_cmd_ins_mode=not self._cur_cmd_ins_mode
-                self._update_cmd_pos()
-            elif schr=="CTRL+C": 
-                self._process.stdin.write("\x03")
-                self._process.stdin.flush()
-            else:
-                if len(schr)==1:
-                    if not self._cur_cmd_ins_mode or self._cur_cmd_pos==len(self._cur_cmd):
-                        self._cur_cmd=self._cur_cmd [:self._cur_cmd_pos] + schr + self._cur_cmd[self._cur_cmd_pos:]
-                    else:
-                        self._cur_cmd=self._cur_cmd [:self._cur_cmd_pos] + schr + self._cur_cmd[self._cur_cmd_pos+1:]
-                    self._cur_cmd_pos+=1
-                    self._update_cmd()
-                    self._update_cmd_pos()
-        finally:
-            self._semaphore.release()
-
-    def _parse(self, s):
-        arret=[]
-        if len(self._cur_cmd_notify)>0:
-            arret=self._cur_cmd_notify
-            self._cur_cmd_notify=[]
-        if s!="":
-            ar = s.splitlines()
-            for i in range(len(ar)):
-                s=ar[i]
-                if len(s)>0:
-                    while (self._cur_col+len(s)>=self._col):
-                        s1=s[:self._col-self._cur_col]
-                        s2=s[self._col-self._cur_col:]
-                        itm = {
-                               'type': 'update',
-                               'row': self._cur_row,
-                               'col': self._cur_col,
-                               'text': s1
-                               }
-                        arret.append(itm)
-                        if self._cur_row<self._row-1:
-                            self._cur_row+=1
-                        else:
-                            itm = {
-                            'type': 'scroll',
-                            'row': 1
-                            }
-                            arret.append(itm)
-                        self._cur_col=0
-                        s=s2
-                    if len(s)>0:
-                        itm = {
-                               'type': 'update',
-                               'row': self._cur_row,
-                               'col': self._cur_col,
-                               'text': s
-                               }
-                        arret.append(itm)
-                        self._cur_col+=len(s)
-                if i<len(ar)-1:
-                    if self._cur_row<self._row-1:
-                        self._cur_row+=1
-                    else:
-                        itm = {
-                           'type': 'scroll',
-                           'row': 1
-                        }
-                        arret.append(itm)
-                    self._cur_col=0
-                itm = {
-                   'type': 'position',
-                   'row': self._cur_row,
-                   'col': self._cur_col,
-                   'ins': self._cur_cmd_ins_mode
-                   }
-                self._update_pos(arret,  itm)
-        return arret
-    #
-    # def read_update(self, inputs):
-    #     # if inputs is not None:
-    #     #     inputs = inputs.split("|")
-    #     #     for i in range(len(inputs)):
-    #     #         schr=inputs[i]
-    #     #         if schr=="PIPE":
-    #     #             schr="|"
-    #     #         self.write_char(schr)
-    #     poll = self._process.poll()
-    #     if poll != None:
-    #         raise Exception("Shell closed.")
-    #     self._semaphore.acquire()
-    #     try:
-    #         data = self._pre_data + self._cur_file.read(1024*8)
-    #         self._pre_data=""
-    #         if data.endswith("\r"):
-    #             data=data[:len(data)-1]
-    #             self._pre_data="\r"
-    #         return self._parse(data)
-    #     finally:
-    #         self._semaphore.release()
+        if c == '\r':
+            c = '\r\n'
+        self._pty.write(c)
 
     def read_update(self):
-        poll = self._process.poll()
-        if poll != None:
-            raise Exception("Shell closed.")
-        self._semaphore.acquire()
-        try:
-            data = self._pre_data + self._cur_file.read(1024*8)
-            self._pre_data=""
-            if data.startswith(self._user_input + "\r\n"):
-                start=data.index("\r\n")
-                data=data[start:]
-                self._user_input = ""
-            return data
-        finally:
-            self._semaphore.release()
+        return self._pty.read()
 
     def change_rows_cols(self, rows, cols):
-        #fcntl.ioctl(self.pio, termios.TIOCSWINSZ, struct.pack("hhhh", rows, cols, 0, 0))
         pass
+
 ''' 
 if __name__ == "__main__":
     #a = os.popen('chcp')

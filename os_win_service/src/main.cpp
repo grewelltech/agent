@@ -404,7 +404,7 @@ void loadProperties() {
 	}else{
 		throw "ERROR: Read properties error.";
 	}
-    WriteToLog(L"Readed properties.");
+    WriteToLog(L"Read properties.");
 }
 
 
