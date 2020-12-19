@@ -1,3 +1,0 @@
-[submodule "lib_pyconpty"]
-	path = lib_pyconpty
-	url = git@github.com:BGrewell/pyconpty.git
