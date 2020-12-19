@@ -20,7 +20,7 @@ import json
 try:
     from lib_pyconpty import conpty
 except Exception as ex:
-    print('failed to load ConPty: ' + str(ex))
+    None
 
 try:
     import ctypes
